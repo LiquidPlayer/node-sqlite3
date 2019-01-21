@@ -21,12 +21,6 @@ Pod::Spec.new do |s|
     "liquidcore/ios/*.{h,m,mm}",
     "node_modules/nan/*.h"
 
-#  s.public_header_files =
-#    "caraml-core/caraml-core/LCCaramlJS.h",
-#    "caraml-core/caraml-core/LCCaramlSurface.h",
-#    "caraml-core/caraml-core/CaramlView.h",
-#    "caraml-core/caraml-core/caraml_core.h"
-
   s.libraries = [
     'sqlite3', # libsqlite3.tbd
   ]
