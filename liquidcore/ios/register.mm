@@ -55,5 +55,5 @@
 __attribute__((constructor))
 static void coreJSRegistration()
 {
-    [LCAddOnFactory registerAddOnFactory:@"sqlite3" factory:[[SQLite3Factory alloc] init]];
+    [LCAddOnFactory registerAddOnFactory:@"node_sqlite3" factory:[[SQLite3Factory alloc] init]];
 }
