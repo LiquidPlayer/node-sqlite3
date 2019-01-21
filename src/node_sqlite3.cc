@@ -106,4 +106,9 @@ const char* sqlite_authorizer_string(int type) {
     }
 }
 
-NODE_MODULE(node_sqlite3, RegisterModule)
+NODE_MODULE_CONTEXT_AWARE(node_sqlite3, RegisterModule)
+
+void register_node_sqlite3()
+{
+    _register_node_sqlite3();
+}

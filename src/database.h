@@ -10,6 +10,7 @@
 #include <nan.h>
 
 #include "async.h"
+#include <map>
 
 using namespace v8;
 
@@ -20,14 +21,17 @@ class Database;
 
 class Database : public Nan::ObjectWrap {
 public:
-    static Nan::Persistent<FunctionTemplate> constructor_template;
     static NAN_MODULE_INIT(Init);
+    static std::map<v8::Isolate *, Nan::Persistent<FunctionTemplate> *> constructor_templates;
 
     static inline bool HasInstance(Local<Value> val) {
         Nan::HandleScope scope;
+        Nan::Persistent<FunctionTemplate> *constructor_template =
+            constructor_templates[v8::Isolate::GetCurrent()];
+        if (!constructor_template) return false;
         if (!val->IsObject()) return false;
         Local<Object> obj = val.As<Object>();
-        return Nan::New(constructor_template)->HasInstance(obj);
+        return Nan::New(*constructor_template)->HasInstance(obj);
     }
 
     struct Baton {
@@ -36,9 +40,10 @@ public:
         Nan::Persistent<Function> callback;
         int status;
         std::string message;
+        uv_loop_t *loop;
 
-        Baton(Database* db_, Local<Function> cb_) :
-                db(db_), status(SQLITE_OK) {
+        Baton(Database* db_, Local<Function> cb_, uv_loop_t *loop_) :
+                db(db_), status(SQLITE_OK), loop(loop_) {
             db->Ref();
             request.data = this;
             callback.Reset(cb_);
@@ -52,20 +57,20 @@ public:
     struct OpenBaton : Baton {
         std::string filename;
         int mode;
-        OpenBaton(Database* db_, Local<Function> cb_, const char* filename_, int mode_) :
-            Baton(db_, cb_), filename(filename_), mode(mode_) {}
+        OpenBaton(Database* db_, Local<Function> cb_, const char* filename_, int mode_, uv_loop_t* loop_) :
+            Baton(db_, cb_, loop_), filename(filename_), mode(mode_) {}
     };
 
     struct ExecBaton : Baton {
         std::string sql;
-        ExecBaton(Database* db_, Local<Function> cb_, const char* sql_) :
-            Baton(db_, cb_), sql(sql_) {}
+        ExecBaton(Database* db_, Local<Function> cb_, const char* sql_, uv_loop_t* loop_) :
+            Baton(db_, cb_, loop_), sql(sql_) {}
     };
 
     struct LoadExtensionBaton : Baton {
         std::string filename;
-        LoadExtensionBaton(Database* db_, Local<Function> cb_, const char* filename_) :
-            Baton(db_, cb_), filename(filename_) {}
+        LoadExtensionBaton(Database* db_, Local<Function> cb_, const char* filename_, uv_loop_t* loop_) :
+            Baton(db_, cb_, loop_), filename(filename_) {}
     };
 
     typedef void (*Work_Callback)(Baton* baton);

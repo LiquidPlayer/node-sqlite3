@@ -83,14 +83,20 @@ const char* sqlite_authorizer_string(int type);
         Nan::New(property).ToLocalChecked()).ToLocalChecked()).FromJust();
 
 #define EXCEPTION(msg, errno, name)                                            \
-    Local<Value> name = Exception::Error(Nan::New(                             \
-        std::string(sqlite_code_string(errno)) +                               \
-        std::string(": ") + std::string(msg)                                   \
-    ).ToLocalChecked());                                                                        \
+    Local<Value> name = Exception::Error(                                      \
+        String::Concat(                                                        \
+            String::Concat(                                                    \
+                Nan::New(sqlite_code_string(errno)).ToLocalChecked(),          \
+                Nan::New(": ").ToLocalChecked()                                \
+            ),                                                                 \
+            (msg)                                                              \
+        )                                                                      \
+    );                                                                         \
     Local<Object> name ##_obj = name.As<Object>();                             \
     Nan::Set(name ##_obj, Nan::New("errno").ToLocalChecked(), Nan::New(errno));\
     Nan::Set(name ##_obj, Nan::New("code").ToLocalChecked(),                   \
         Nan::New(sqlite_code_string(errno)).ToLocalChecked());
+
 
 #define EMIT_EVENT(obj, argc, argv)                                            \
     TRY_CATCH_CALL((obj),                                                      \
@@ -116,7 +122,7 @@ const char* sqlite_authorizer_string(int type);
     assert(baton->stmt->prepared);                                             \
     baton->stmt->locked = true;                                                \
     baton->stmt->db->pending++;                                                \
-    int status = uv_queue_work(uv_default_loop(),                              \
+    int status = uv_queue_work(baton->loop,                                    \
         &baton->request,                                                       \
         Work_##type, reinterpret_cast<uv_after_work_cb>(Work_After##type));    \
     assert(status == 0);

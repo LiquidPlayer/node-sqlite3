@@ -73,8 +73,6 @@ typedef Row Parameters;
 
 class Statement : public Nan::ObjectWrap {
 public:
-    static Nan::Persistent<FunctionTemplate> constructor_template;
-
     static NAN_MODULE_INIT(Init);
     static NAN_METHOD(New);
 
@@ -83,8 +81,9 @@ public:
         Statement* stmt;
         Nan::Persistent<Function> callback;
         Parameters parameters;
+        uv_loop_t *loop;
 
-        Baton(Statement* stmt_, Local<Function> cb_) : stmt(stmt_) {
+        Baton(Statement* stmt_, Local<Function> cb_, uv_loop_t* loop_) : stmt(stmt_), loop(loop_) {
             stmt->Ref();
             request.data = this;
             callback.Reset(cb_);
@@ -100,21 +99,21 @@ public:
     };
 
     struct RowBaton : Baton {
-        RowBaton(Statement* stmt_, Local<Function> cb_) :
-            Baton(stmt_, cb_) {}
+        RowBaton(Statement* stmt_, Local<Function> cb_, uv_loop_t *loop_) :
+            Baton(stmt_, cb_, loop_) {}
         Row row;
     };
 
     struct RunBaton : Baton {
-        RunBaton(Statement* stmt_, Local<Function> cb_) :
-            Baton(stmt_, cb_), inserted_id(0), changes(0) {}
+        RunBaton(Statement* stmt_, Local<Function> cb_, uv_loop_t *loop_) :
+            Baton(stmt_, cb_, loop_), inserted_id(0), changes(0) {}
         sqlite3_int64 inserted_id;
         int changes;
     };
 
     struct RowsBaton : Baton {
-        RowsBaton(Statement* stmt_, Local<Function> cb_) :
-            Baton(stmt_, cb_) {}
+        RowsBaton(Statement* stmt_, Local<Function> cb_, uv_loop_t *loop_) :
+            Baton(stmt_, cb_, loop_) {}
         Rows rows;
     };
 
@@ -124,8 +123,8 @@ public:
         Nan::Persistent<Function> completed;
         Async* async; // Isn't deleted when the baton is deleted.
 
-        EachBaton(Statement* stmt_, Local<Function> cb_) :
-            Baton(stmt_, cb_) {}
+        EachBaton(Statement* stmt_, Local<Function> cb_, uv_loop_t *loop_) :
+            Baton(stmt_, cb_, loop_) {}
         virtual ~EachBaton() {
             completed.Reset();
         }
@@ -134,8 +133,8 @@ public:
     struct PrepareBaton : Database::Baton {
         Statement* stmt;
         std::string sql;
-        PrepareBaton(Database* db_, Local<Function> cb_, Statement* stmt_) :
-            Baton(db_, cb_), stmt(stmt_) {
+        PrepareBaton(Database* db_, Local<Function> cb_, Statement* stmt_, uv_loop_t *loop_) :
+            Baton(db_, cb_, loop_), stmt(stmt_) {
             stmt->Ref();
         }
         virtual ~PrepareBaton() {
@@ -169,12 +168,12 @@ public:
         Nan::Persistent<Function> item_cb;
         Nan::Persistent<Function> completed_cb;
 
-        Async(Statement* st, uv_async_cb async_cb) :
+        Async(Statement* st, uv_async_cb async_cb, uv_loop_t *loop_) :
                 stmt(st), completed(false), retrieved(0) {
             watcher.data = this;
             NODE_SQLITE3_MUTEX_INIT
             stmt->Ref();
-            uv_async_init(uv_default_loop(), &watcher, async_cb);
+            uv_async_init(loop_, &watcher, async_cb);
         }
 
         ~Async() {

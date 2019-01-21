@@ -1,15 +1,15 @@
 #include <string.h>
-#include <node.h>
-#include <node_buffer.h>
-#include <node_version.h>
+#include "node.h"
+#include "node_buffer.h"
+#include "node_version.h"
 
 #include "macros.h"
 #include "database.h"
 #include "statement.h"
+#include "env.h"
+#include "env-inl.h"
 
 using namespace node_sqlite3;
-
-Nan::Persistent<FunctionTemplate> Statement::constructor_template;
 
 NAN_MODULE_INIT(Statement::Init) {
     Nan::HandleScope scope;
@@ -27,7 +27,6 @@ NAN_MODULE_INIT(Statement::Init) {
     Nan::SetPrototypeMethod(t, "reset", Reset);
     Nan::SetPrototypeMethod(t, "finalize", Finalize);
 
-    constructor_template.Reset(t);
     Nan::Set(target, Nan::New("Statement").ToLocalChecked(),
         Nan::GetFunction(t).ToLocalChecked());
 }
@@ -65,7 +64,7 @@ template <class T> void Statement::Error(T* baton) {
     Statement* stmt = baton->stmt;
     // Fail hard on logic errors.
     assert(stmt->status != 0);
-    EXCEPTION(stmt->message, stmt->status, exception);
+    EXCEPTION(Nan::New(stmt->message.c_str()).ToLocalChecked(), stmt->status, exception);
 
     Local<Function> cb = Nan::New(baton->callback);
 
@@ -100,12 +99,18 @@ NAN_METHOD(Statement::New) {
     Database* db = Nan::ObjectWrap::Unwrap<Database>(info[0].As<Object>());
     Local<String> sql = Local<String>::Cast(info[1]);
 
-    Nan::ForceSet(info.This(),Nan::New("sql").ToLocalChecked(), sql, ReadOnly);
+    /*
+    info.This()->ForceSet(Nan::New("sql").ToLocalChecked(), sql, ReadOnly);
+    */
+    CHECK(info.This()->DefineOwnProperty(info.GetIsolate()->GetCurrentContext(),
+        Nan::New("sql").ToLocalChecked(), sql, ReadOnly).ToChecked());
 
     Statement* stmt = new Statement(db);
     stmt->Wrap(info.This());
 
-    PrepareBaton* baton = new PrepareBaton(db, Local<Function>::Cast(info[2]), stmt);
+    Environment* env = Environment::GetCurrent(info.GetIsolate());
+
+    PrepareBaton* baton = new PrepareBaton(db, Local<Function>::Cast(info[2]), stmt, env->event_loop());
     baton->sql = std::string(*Nan::Utf8String(sql));
     db->Schedule(Work_BeginPrepare, baton);
 
@@ -115,7 +120,7 @@ NAN_METHOD(Statement::New) {
 void Statement::Work_BeginPrepare(Database::Baton* baton) {
     assert(baton->db->open);
     baton->db->pending++;
-    int status = uv_queue_work(uv_default_loop(),
+    int status = uv_queue_work(baton->loop,
         &baton->request, Work_Prepare, (uv_after_work_cb)Work_AfterPrepare);
     assert(status == 0);
 }
@@ -205,7 +210,9 @@ template <class T> T* Statement::Bind(Nan::NAN_METHOD_ARGS_TYPE info, int start,
         last--;
     }
 
-    T* baton = new T(this, callback);
+    Environment* env = Environment::GetCurrent(info.GetIsolate());
+
+    T* baton = new T(this, callback, env->event_loop());
 
     if (start < last) {
         if (info[start]->IsArray()) {
@@ -594,7 +601,7 @@ void Statement::Work_BeginEach(Baton* baton) {
     // Only create the Async object when we're actually going into
     // the event loop. This prevents dangling events.
     EachBaton* each_baton = static_cast<EachBaton*>(baton);
-    each_baton->async = new Async(each_baton->stmt, reinterpret_cast<uv_async_cb>(AsyncEach));
+    each_baton->async = new Async(each_baton->stmt, reinterpret_cast<uv_async_cb>(AsyncEach), baton->loop);
     each_baton->async->item_cb.Reset(each_baton->callback);
     each_baton->async->completed_cb.Reset(each_baton->completed);
 
@@ -714,7 +721,9 @@ NAN_METHOD(Statement::Reset) {
 
     OPTIONAL_ARGUMENT_FUNCTION(0, callback);
 
-    Baton* baton = new Baton(stmt, callback);
+    Environment* env = Environment::GetCurrent(info.GetIsolate());
+
+    Baton* baton = new Baton(stmt, callback, env->event_loop());
     stmt->Schedule(Work_BeginReset, baton);
 
     info.GetReturnValue().Set(info.This());
@@ -820,7 +829,9 @@ NAN_METHOD(Statement::Finalize) {
     Statement* stmt = Nan::ObjectWrap::Unwrap<Statement>(info.This());
     OPTIONAL_ARGUMENT_FUNCTION(0, callback);
 
-    Baton* baton = new Baton(stmt, callback);
+    Environment* env = Environment::GetCurrent(info.GetIsolate());
+
+    Baton* baton = new Baton(stmt, callback, env->event_loop());
     stmt->Schedule(Finalize, baton);
 
     info.GetReturnValue().Set(stmt->db->handle());
@@ -857,7 +868,7 @@ void Statement::CleanQueue() {
     if (prepared && !queue.empty()) {
         // This statement has already been prepared and is now finalized.
         // Fire error for all remaining items in the queue.
-        EXCEPTION("Statement is already finalized", SQLITE_MISUSE, exception);
+        EXCEPTION(Nan::New<String>("Statement is already finalized").ToLocalChecked(), SQLITE_MISUSE, exception);
         Local<Value> argv[] = { exception };
         bool called = false;
 
