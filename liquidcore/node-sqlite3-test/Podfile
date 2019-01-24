@@ -1,0 +1,12 @@
+platform :ios, '10.0'
+use_frameworks!
+
+target 'node-sqlite3-test' do
+  pod 'LiquidCore', :path => '~/workspace/LiquidPlayer/LiquidCore/LiquidCore.podspec'
+  pod 'node-sqlite3', :path => '../../node-sqlite3.podspec'
+  
+  target 'node-sqlite3-testTests' do
+      inherit! :search_paths
+  end
+
+end

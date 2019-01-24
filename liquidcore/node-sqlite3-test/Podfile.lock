@@ -1,0 +1,22 @@
+PODS:
+  - LiquidCore (0.5.1)
+  - node-sqlite3 (0.6.0):
+    - LiquidCore
+
+DEPENDENCIES:
+  - LiquidCore (from `~/workspace/LiquidPlayer/LiquidCore/LiquidCore.podspec`)
+  - node-sqlite3 (from `../../node-sqlite3.podspec`)
+
+EXTERNAL SOURCES:
+  LiquidCore:
+    :path: "~/workspace/LiquidPlayer/LiquidCore/LiquidCore.podspec"
+  node-sqlite3:
+    :path: "../../node-sqlite3.podspec"
+
+SPEC CHECKSUMS:
+  LiquidCore: f1d49005094e4015d77c6c372bdcaf0c03c419c1
+  node-sqlite3: e5318ff7bd8e45d9a83c883d0c4cda6b3ede04d2
+
+PODFILE CHECKSUM: e7cbfabf327cb5c15865e9c033caa5531ef39a9e
+
+COCOAPODS: 1.5.3
