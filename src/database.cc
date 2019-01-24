@@ -4,7 +4,7 @@
 #include "database.h"
 #include "statement.h"
 
-#include "nodedroid_file.h"
+#include "addon.h"
 #include "env.h"
 #include "env-inl.h"
 
@@ -126,17 +126,10 @@ NAN_METHOD(Database::New) {
     const char *use_fn = *filename;
     std::string dealiased;
     if (strcmp(use_fn,"") && strcmp(*filename,":memory:")) {
-        Local<Value> fn = nodedroid::fs_(env, info[0], _FS_ACCESS_RD | _FS_ACCESS_WR);
-        Nan::Utf8String aliased(fn);
-        if (*aliased) {
-            std::string aliased_(*aliased);
-            size_t found = aliased_.find_last_of("/");
-            std::string path = aliased_.substr(0,found);
-            std::string file = aliased_.substr(found+1);
-            fn = nodedroid::fs_(env, String::NewFromUtf8(info.GetIsolate(),path.c_str()),
-                _FS_ACCESS_NONE);
-            Nan::Utf8String dealiased_path(fn);
-            dealiased = std::string(*dealiased_path) + "/" + file;
+        MaybeLocal<Value> fn = LiquidCore::resolve(info[0]);
+        if (!fn.IsEmpty()) {
+            Nan::Utf8String aliased(fn.ToLocalChecked());
+            dealiased = *aliased;
             use_fn = dealiased.c_str();
         }
     }

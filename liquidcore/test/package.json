@@ -1,0 +1,17 @@
+{
+  "name": "sqlite3-test",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node node_modules/liquidcore-cli/cli.js",
+    "server": "node node_modules/liquidcore-cli/cli.js server",
+    "bundler": "node node_modules/liquidcore-cli/cli.js bundle"
+  },
+  "dependencies": {
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "liquidcore-cli": "^0.3.0",
+    "react-native": "0.56.0",
+    "sqlite3": "file:../.."
+  }
+}
