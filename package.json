@@ -60,5 +60,11 @@
     "sqlite3",
     "database"
   ],
-  "main": "./lib/sqlite3"
+  "main": "./lib/sqlite3",
+  "liquidcore-addon": {
+    "android": "liquidcore/release/node-sqlite3-release",
+    "android-dev": "liquidcore/node-sqlite3",
+    "ios": 0,
+    "ios-dev": "node-sqlite3.podspec"
+  }
 }
