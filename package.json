@@ -65,6 +65,9 @@
     "android": "liquidcore/release/node-sqlite3-release",
     "android-dev": "liquidcore/node-sqlite3",
     "ios": 0,
-    "ios-dev": "node-sqlite3.podspec"
+    "ios-dev": {
+      "name": "node-sqlite3",
+      "path": "node-sqlite3.podspec"
+    }
   }
 }

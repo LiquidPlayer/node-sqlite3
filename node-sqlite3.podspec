@@ -29,12 +29,17 @@ Pod::Spec.new do |s|
     :CLANG_WARN_DOCUMENTATION_COMMENTS => 'NO',
     :GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS => 'NO',
     :GCC_WARN_64_TO_32_BIT_CONVERSION => 'NO',
+    :SYSTEM_HEADER_SEARCH_PATHS => [
+      "${PODS_CONFIGURATION_BUILD_DIR}/LiquidCore/LiquidCore.framework/PrivateHeaders"
+    ].join(' '),
 
     :OTHER_CPLUSPLUSFLAGS => [
-      '-DNODE_WANT_INTERNALS=1',
+      '-DNODE_WANT_INTERNALS=1'
     ].join(' '),
 
   }
+
+  s.swift_version = '3.0'
 
   s.dependency "LiquidCore"
 end
