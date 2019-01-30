@@ -33,7 +33,6 @@ function test(fname) {
         assert(row.info == 'Ipsum ' + String(row.id-1),
           'row.info == "Ipsum ' + String(row.id-1) +'"');
     });
-    
   });
 
   db.close();
