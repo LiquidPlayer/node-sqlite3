@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "node-sqlite3"
-  s.version      = "0.6.0"
+  s.version      = "0.1.0"
   s.summary      = "Asynchronous, non-blocking SQLite3 bindings for LiqudCore"
 
   s.description  = <<-DESC

@@ -1,5 +1,5 @@
 include ':node-sqlite3'
-include ':LiquidCoreAndroid'
+include ':LiquidCore'
 
-project(':LiquidCoreAndroid').projectDir = new File(
+project(':LiquidCore').projectDir = new File(
         rootProject.projectDir, '../../LiquidCore/LiquidCoreAndroid')

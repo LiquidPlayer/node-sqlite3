@@ -1,7 +1,7 @@
 {
-  "name": "sqlite3",
+  "name": "@liquidcore/sqlite3",
   "description": "Asynchronous, non-blocking SQLite3 bindings",
-  "version": "4.0.6",
+  "version": "0.1.0",
   "homepage": "http://github.com/mapbox/node-sqlite3",
   "author": {
     "name": "MapBox",
@@ -66,7 +66,6 @@
     "android-dev": "liquidcore/node-sqlite3",
     "ios": {
       "name": "node-sqlite3",
-      "version": "0.6.0",
       "specs": "https://github.com/LiquidPlayer/Specs.git"
     },
     "ios-dev": {
