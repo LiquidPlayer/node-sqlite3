@@ -14,7 +14,11 @@ Pod::Spec.new do |s|
 
   s.platform = :ios, '10.0'
 
-  s.source = { :git => "https://github.com/LiquidPlayer/node-sqlit3.git", :tag => "#{s.version}" }
+  s.source = { :git => "https://github.com/LiquidPlayer/node-sqlite3.git", :tag => "#{s.version}" }
+
+  s.prepare_command = <<-CMD
+    npm install
+  CMD
 
   s.source_files  =
     "src/*.{cc,h}",
