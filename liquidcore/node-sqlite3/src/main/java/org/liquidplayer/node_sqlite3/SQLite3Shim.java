@@ -23,7 +23,7 @@ import android.database.sqlite.SQLiteMisuseException;
 import android.database.sqlite.SQLiteOutOfMemoryException;
 import android.database.sqlite.SQLiteReadOnlyDatabaseException;
 import android.database.sqlite.SQLiteTableLockedException;
-import android.support.annotation.Keep;
+import androidx.annotation.Keep;
 
 import static org.liquidplayer.node_sqlite3.SQLite3Shim.CODES.SQLITE_ERROR;
 import static org.liquidplayer.node_sqlite3.SQLite3Shim.CODES.SQLITE_OK;
