@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'de.undercouch.download'
 
 android {
     compileSdkVersion 28
@@ -29,10 +30,6 @@ android {
     }
 }
 
-configurations {
-    liquidcore {}
-}
-
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.1.0'
@@ -40,42 +37,7 @@ dependencies {
     androidTestImplementation 'androidx.annotation:annotation:1.1.0'
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test:rules:1.2.0'
-
-    if (findProject(':LiquidCore') != null) {
-        liquidcore project(path: ':LiquidCore', configuration: 'default')
-        liquidcore project(path: ':LiquidV8', configuration: 'default')
-        implementation project(':LiquidCore')
-        implementation project(':LiquidV8')
-    } else {
-        liquidcore 'com.github.LiquidPlayer:LiquidCore:0.7.0'
-        liquidcore 'com.github.LiquidPlayer:LiquidV8:0.7.0'
-        implementation 'com.github.LiquidPlayer:LiquidCore:0.7.0'
-        implementation 'com.github.LiquidPlayer:LiquidV8:0.7.0'
-    }
 }
 
-task extractAddOnLibsAndHeaders(type: Sync) {
-    dependsOn configurations.liquidcore
-
-    from {
-        configurations.liquidcore.collect {zipTree(it)}
-    }
-    include "jni/**/*.so", "include/**/*"
-    into "build/liquidcore-addon"
-}
-
-afterEvaluate {
-    def addon = file('build/liquidcore-addon')
-    if (!addon.exists()) {
-        if (project.hasProperty("externalNativeBuildDebug")) {
-            externalNativeBuildDebug.dependsOn extractAddOnLibsAndHeaders
-        }
-        if (project.hasProperty("externalNativeBuildRelease")) {
-            externalNativeBuildRelease.dependsOn extractAddOnLibsAndHeaders
-        }
-    }
-}
-
-apply plugin: 'com.github.dcendents.android-maven'
-
-group='com.github.liquidplayer'
+apply from: new File(buildscript.getSourceFile(), '../../../node_modules/liquidcore/include.gradle')
+apply from: new File(buildscript.getSourceFile(), '../../../node_modules/liquidcore/addon.gradle')

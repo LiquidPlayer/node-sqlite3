@@ -1,0 +1,43 @@
+apply plugin: 'de.undercouch.download'
+import groovy.json.JsonSlurper
+
+def getNodeSQLite3VersionFromNpm() {
+    def inputFile = new File(buildscript.getSourceFile().getParent(), "package.json")
+    def packageJson = new JsonSlurper().parseText(inputFile.text)
+
+    return packageJson["version"]
+}
+
+if (!project.hasProperty('node_sqlite3_include_gradle')) {
+  project.ext.set('node_sqlite3_include_gradle', true)
+  def _sqlite3_aar = "sqlite3-lib-" + getNodeSQLite3VersionFromNpm() + ".aar"
+
+  def downloadsDir_node_sqlite3 = new File(rootProject.projectDir, ".liquidcore")
+  task createDownloadsDir_node_sqlite3 {
+      downloadsDir_node_sqlite3.mkdirs()
+  }
+  dependencies {
+      if (findProject(':sqlite3-lib') != null) {
+          implementation project(':sqlite3-lib')
+      } else {
+          implementation fileTree(include:[_sqlite3_aar], dir:downloadsDir_node_sqlite3)
+      }
+  }
+
+  if (findProject(':sqlite3-lib') == null) {
+    android { tasks.withType(JavaCompile) {
+        compileTask -> compileTask.dependsOn download_sqlite3_lib }}
+    task download_sqlite3_lib(dependsOn: createDownloadsDir_node_sqlite3, type: Download) {
+        src 'https://liquidplayer.github.io/packages/' + _sqlite3_aar
+        onlyIfNewer true
+        overwrite false
+        dest new File(downloadsDir_node_sqlite3, _sqlite3_aar)
+    }
+  }
+
+  try {
+    apply from: new File(rootProject.projectDir, 'node_modules/liquidcore/include.gradle')
+  } catch (Exception e) {
+    apply from: new File(buildscript.getSourceFile(), '../node_modules/liquidcore/include.gradle')
+  }
+}
