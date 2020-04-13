@@ -36,14 +36,19 @@ Pod::Spec.new do |s|
     :GCC_WARN_64_TO_32_BIT_CONVERSION => 'NO',
     :CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES => 'YES',
     :SYSTEM_HEADER_SEARCH_PATHS => [
+      "${PODS_CONFIGURATION_BUILD_DIR}/LiquidCore-headers/LiquidCore_headers.framework/PrivateHeaders/v8",
+      "${PODS_CONFIGURATION_BUILD_DIR}/LiquidCore-headers/LiquidCore_headers.framework/PrivateHeaders/node",
+      "${PODS_CONFIGURATION_BUILD_DIR}/LiquidCore-headers/LiquidCore_headers.framework/PrivateHeaders/uv",
       "${PODS_CONFIGURATION_BUILD_DIR}/LiquidCore-headers/LiquidCore_headers.framework/PrivateHeaders",
     ].join(' '),
-    :OTHER_CPLUSPLUSFLAGS => [
-      '-DNODE_WANT_INTERNALS=1'
+    :OTHER_CFLAGS => [
+      '-Wno-nullability-completeness'
     ].join(' '),
-
+    :OTHER_CPLUSPLUSFLAGS => [
+      '-DNODE_WANT_INTERNALS=1',
+      '-Wno-nullability-completeness'
+    ].join(' '),
   }
-  s.swift_version = '3.0'
   s.dependency "LiquidCore"
-  s.dependency 'LiquidCore-headers'
+  s.dependency "LiquidCore-headers"
 end
